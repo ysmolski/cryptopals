@@ -64,7 +64,7 @@ func isAdmin(ct []byte) bool {
 	copy(res, ct)
 	util.CBCDecrypt(block, iv, res, res)
 	fmt.Println(string(res))
-	return false
+	return bytes.Count(res, []byte(";admin=true;")) > 0
 }
 
 func main() {
