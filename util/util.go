@@ -25,13 +25,19 @@ func Pad(seq []byte, n int) []byte {
 func PadTo(seq []byte, size int) []byte {
 	if len(seq)%size != 0 {
 		return Pad(seq, len(seq)+16-len(seq)%size)
+	} else {
+		return Pad(seq, len(seq)+16)
 	}
-	return seq
 }
+
+var BadPad = errors.New("Bad padding")
 
 func CheckPadding(b []byte) ([]byte, error) {
 	last := int(b[len(b)-1])
 	canStrip := true
+	if last > len(b) || last == 0 {
+		return nil, BadPad
+	}
 	for i := len(b) - last; i < len(b); i++ {
 		if b[i] != byte(last) {
 			canStrip = false
@@ -41,7 +47,7 @@ func CheckPadding(b []byte) ([]byte, error) {
 	if canStrip {
 		return b[:len(b)-last], nil
 	}
-	return b, errors.New("Bad padding")
+	return b, BadPad
 
 }
 
