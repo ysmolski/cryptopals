@@ -56,9 +56,7 @@ func getMsg() (ct, iv []byte) {
 	}
 	iv = util.RandAes128()
 	block, _ := aes.NewCipher(key)
-	fmt.Println("before padding", len(ct))
 	ct = util.PadTo(ct, block.BlockSize())
-	fmt.Println("after padding", len(ct))
 	util.CBCEncrypt(block, iv, ct, ct)
 	return ct, iv
 }
@@ -69,18 +67,15 @@ func isPadValid(ct, iv []byte) bool {
 	copy(res, ct)
 	util.CBCDecrypt(block, iv, res, res)
 	_, err := util.CheckPadding(res)
+	// fmt.Println(res, err == nil)
 	return err == nil
 }
 
-func main() {
-	ct, iv0 := getMsg()
-	// attack 2nd block
-	iv0 = ct[:16]
-	ct = ct[16:32]
+func attackPadding(ct, iv0 []byte) []byte {
 	plain := make([]byte, len(ct))
 	for i := 15; i >= 0; i-- {
 		iv := make([]byte, len(iv0))
-		copy(iv, iv0)
+		// copy(iv, iv0)
 		pad := byte(16 - i)
 		for j := i + 1; j < 16; j++ {
 			iv[j] = iv0[j] ^ plain[j] ^ pad
@@ -92,7 +87,7 @@ func main() {
 			if valid {
 				plain[i] = byte(g)
 				found = true
-				fmt.Println(i, pad, "iv:", iv)
+				// fmt.Println(i, pad, "iv:", iv)
 				break
 			}
 		}
@@ -101,5 +96,17 @@ func main() {
 			break
 		}
 	}
-	fmt.Println(string(plain))
+	return plain
+}
+
+func main() {
+	ct, iv0 := getMsg()
+	fmt.Println("len:", len(ct), "blocks:", len(ct)/16)
+	pt := attackPadding(ct[:16], iv0)
+	for i := len(ct) - 16; i < len(ct); i += 16 {
+		p := attackPadding(ct[i:i+16], ct[i-16:i])
+		pt = append(pt, p...)
+	}
+	pt, err := util.CheckPadding(pt)
+	fmt.Println("Plaintext:", string(pt), "\nPadding is valid:", err == nil)
 }
