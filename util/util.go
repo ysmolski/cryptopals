@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"os"
@@ -126,14 +127,39 @@ func CBCEncrypt(block cipher.Block, iv, dst, src []byte) {
 	}
 	x := make([]byte, size)
 	copy(x, iv)
-	var i int
-	for i = 0; i < len(dst) && i < len(src); i += size {
+	for i := 0; i < len(dst) && i < len(src); i += size {
 		for j := 0; j < size; j++ {
 			x[j] ^= src[i+j]
 		}
 		block.Encrypt(dst[i:i+size], x)
 		copy(x, dst[i:i+size])
 	}
+}
+
+func CTREncrypt(block cipher.Block, nonce, dst, src []byte) {
+	size := block.BlockSize()
+	if len(nonce) != size {
+		panic("size of IV not equal to block size")
+	}
+	if len(dst) == 0 || len(src) == 0 {
+		return
+	}
+	// temp key
+	key := make([]byte, size)
+	// copy of nonce
+	n := make([]byte, size)
+	copy(n, nonce)
+	counter := binary.LittleEndian.Uint64(n[8:])
+	for i := 0; i < len(dst) && i < len(src); i += size {
+		block.Encrypt(key, n)
+
+		for j := 0; j < size && i+j < len(src); j++ {
+			dst[i+j] = src[i+j] ^ key[j]
+		}
+		counter++
+		binary.LittleEndian.PutUint64(n[8:], counter)
+	}
+	return
 }
 
 func RandByte() byte {
