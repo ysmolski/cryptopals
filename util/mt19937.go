@@ -24,11 +24,11 @@ func (m *MT19937) Next() uint64 {
 		m.Twist()
 	}
 	y := m.mt[m.index]
+
 	y = y ^ y>>11
 	y = y ^ y<<7&2636928640
 	y = y ^ y<<15&4022730752
 	y = y ^ y>>18
-
 	m.index++
 
 	return lsb32(y)
@@ -44,4 +44,12 @@ func (m *MT19937) Twist() {
 		}
 	}
 	m.index = 0
+}
+
+func (m *MT19937) SetIndex(i uint64) {
+	m.index = i
+}
+
+func (m *MT19937) SetMT(i, value uint64) {
+	m.mt[i] = value
 }
