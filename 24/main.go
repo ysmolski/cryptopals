@@ -20,6 +20,7 @@ import (
 	"cryptopals/util"
 	"errors"
 	"fmt"
+	"time"
 )
 
 func untemper(y uint64) uint64 {
@@ -81,6 +82,17 @@ func MTEncrypt(key int, dst, src []byte) error {
 	return nil
 }
 
+func isMT19337Token(n uint64) bool {
+	now := uint64(time.Now().Unix())
+	for i := now; i > now-3600*24*7; i-- {
+		mt := util.NewMT19337(i)
+		if mt.Next() == n {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	{
 		// testing that crypto works back and forth
@@ -107,5 +119,11 @@ func main() {
 			}
 		}
 	}
-
+	{
+		// generate "random" "password reset token"
+		mt := util.NewMT19337(uint64(time.Now().Unix()))
+		token := mt.Next()
+		time.Sleep(1 * time.Second)
+		fmt.Println("Is MT19337 token: ", isMT19337Token(token))
+	}
 }
