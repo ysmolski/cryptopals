@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -26,9 +27,8 @@ func Pad(seq []byte, n int) []byte {
 func PadTo(seq []byte, size int) []byte {
 	if len(seq)%size != 0 {
 		return Pad(seq, len(seq)+16-len(seq)%size)
-	} else {
-		return Pad(seq, len(seq)+16)
 	}
+	return Pad(seq, len(seq)+16)
 }
 
 var BadPad = errors.New("Bad padding")
@@ -67,6 +67,21 @@ func ReadBase64Stdin() []byte {
 	}
 	return bytes
 
+}
+
+func ReadFile(filename string) []byte {
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	scan := bufio.NewScanner(file)
+	bytes := make([]byte, 0, 1024)
+
+	for scan.Scan() {
+		input := []byte(scan.Text())
+		bytes = append(bytes, input...)
+	}
+	return bytes
 }
 
 func ECBDecrypt(block cipher.Block, dst, src []byte) {

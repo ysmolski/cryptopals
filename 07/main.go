@@ -1,32 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"crypto/aes"
-	"encoding/base64"
+	"cryptopals/util"
 	"fmt"
-	"os"
 )
 
-func readHexIntoBytes() []byte {
-	scan := bufio.NewScanner(os.Stdin)
-	bytes := make([]byte, 0, 1024)
-
-	for scan.Scan() {
-		input := scan.Text()
-		bs, err := base64.StdEncoding.DecodeString(input)
-		if err != nil {
-			fmt.Println(err)
-			return bytes
-		}
-		bytes = append(bytes, bs...)
-	}
-	return bytes
-}
 func main() {
 	key := []byte("YELLOW SUBMARINE")
 
-	bytes := readHexIntoBytes()
+	bytes := util.ReadBase64Stdin()
 	fmt.Println(len(bytes))
 	block, err := aes.NewCipher(key)
 	if err != nil {
