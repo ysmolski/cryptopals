@@ -20,7 +20,7 @@ Crypto nerds know where we're going with this. Bear with us.
 */
 
 import (
-	"cryptopals"
+	"cryptopals/util"
 	"fmt"
 )
 

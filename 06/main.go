@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bufio"
+	"cryptopals/util"
 	"encoding/base64"
 	"fmt"
 	"math"
-	"os"
 )
 
 var idealFreqs = []float64{
@@ -154,18 +153,9 @@ func encodeKeyXor(text, key []byte) []byte {
 }
 
 func main() {
-	scan := bufio.NewScanner(os.Stdin)
-	bytes := make([]byte, 0, 1024)
+	encoded := util.ReadFile("6.txt")
+	bytes, _ := base64.StdEncoding.DecodeString(string(encoded))
 
-	for scan.Scan() {
-		input := scan.Text()
-		bs, err := base64.StdEncoding.DecodeString(input)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		bytes = append(bytes, bs...)
-	}
 	fmt.Println("bytes:", len(bytes))
 	fmt.Println("test: ", hammingDistance([]byte("this is a test"), []byte("wokka wokka!!!")))
 	size := findSizeRepeatXor(bytes)

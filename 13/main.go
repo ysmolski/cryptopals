@@ -37,95 +37,15 @@ Using only the user input to profile_for() (as an oracle to generate "valid" cip
 */
 
 import (
-	"bufio"
 	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"encoding/base64"
+	"cryptopals/util"
 	"fmt"
 	"net/url"
-	"os"
 )
-
-func pad(seq []byte, n int) []byte {
-	if n > len(seq) {
-		size := n - len(seq)
-		appendix := make([]byte, size)
-		for i := 0; i < size; i++ {
-			appendix[i] = byte(size)
-		}
-		return append(seq, appendix...)
-	}
-	return seq
-}
-
-func padTo(seq []byte, size int) []byte {
-	if len(seq)%size != 0 {
-		return pad(seq, len(seq)+16-len(seq)%size)
-	}
-	return seq
-}
-
-func readBase64Stdin() []byte {
-	scan := bufio.NewScanner(os.Stdin)
-	bytes := make([]byte, 0, 1024)
-
-	for scan.Scan() {
-		input := scan.Text()
-		bs, err := base64.StdEncoding.DecodeString(input)
-		if err != nil {
-			fmt.Println(err)
-			return nil
-		}
-		bytes = append(bytes, bs...)
-	}
-	return bytes
-
-}
-
-func ECBDecrypt(block cipher.Block, dst, src []byte) {
-	size := block.BlockSize()
-	if len(dst)%size != 0 {
-		panic("size of dst and src should be multiples of blocksize")
-	}
-	for i := 0; i < len(dst); i += size {
-		block.Decrypt(dst[i:i+size], src[i:i+size])
-	}
-}
-
-func ECBEncrypt(block cipher.Block, dst, src []byte) {
-	size := block.BlockSize()
-	if len(dst)%size != 0 {
-		panic("size of dst and src should be multiples of blocksize")
-	}
-	for i := 0; i < len(dst); i += size {
-		block.Encrypt(dst[i:i+size], src[i:i+size])
-	}
-}
-
-func randBytes(n int) []byte {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		fmt.Println("error:", err)
-		return nil
-	}
-	return b
-}
-
-func randAes128() []byte {
-	return randBytes(16)
-}
-
-func randByte() byte {
-	b := make([]byte, 1)
-	rand.Read(b)
-	return b[0]
-}
 
 type oracleFunc func(src []byte) []byte
 
-var key = randAes128()
+var key = util.RandAes128()
 
 func encryptProfile(email string) []byte {
 	block, _ := aes.NewCipher(key)
@@ -133,9 +53,9 @@ func encryptProfile(email string) []byte {
 	out := make([]byte, len(profile))
 	copy(out, profile)
 
-	out = padTo(out, 16)
+	out = util.PadTo(out, 16)
 	fmt.Println("before enc:", out)
-	ECBEncrypt(block, out, out)
+	util.ECBEncrypt(block, out, out)
 
 	return out
 }
@@ -144,7 +64,7 @@ func decryptProfile(ct []byte) url.Values {
 	block, _ := aes.NewCipher(key)
 	res := make([]byte, len(ct))
 	// fmt.Println("before enc", string(out))
-	ECBDecrypt(block, res, ct)
+	util.ECBDecrypt(block, res, ct)
 	// unpad
 	last := int(res[len(res)-1])
 	if last < block.BlockSize() {
