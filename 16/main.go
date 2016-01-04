@@ -53,7 +53,6 @@ func crypt(userdata []byte) []byte {
 	res = append(res, postfix...)
 	block, _ := aes.NewCipher(key)
 	res = util.PadTo(res, 16)
-	fmt.Println(len(res), string(res))
 	util.CBCEncrypt(block, iv, res, res)
 	return res
 }
@@ -63,21 +62,21 @@ func isAdmin(ct []byte) bool {
 	res := make([]byte, len(ct))
 	copy(res, ct)
 	util.CBCDecrypt(block, iv, res, res)
-	fmt.Println(string(res))
+	fmt.Println("isAdmin peek:", string(res))
 	return bytes.Count(res, []byte(";admin=true;")) > 0
 }
 
 func main() {
+	// prepare aligned data
 	ud := []byte("123456709-120456123456:admin<true")
 	ct := crypt(ud)
 	fmt.Printf("ct: %d %x\n", len(ct), ct)
+	// bytes we going to flip, characters : and <
 	pos := []int{32 + 6, 32 + 12}
-	for i, p := range pos {
-		fmt.Print(i, p, ct[p], "-> ")
+	for _, p := range pos {
+		fmt.Print("at position ", p, " flip byte ", ct[p], " to ")
 		ct[p] = ct[p] ^ 1
 		fmt.Println(ct[p])
 	}
-
-	adm := isAdmin(ct)
-	fmt.Println(adm)
+	fmt.Println("Is Admin ==", isAdmin(ct))
 }
