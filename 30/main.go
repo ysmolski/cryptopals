@@ -1,5 +1,9 @@
 package main
 
+/*
+Second verse, same as the first, but use MD4 instead of SHA-1. Having done this attack once against SHA-1, the MD4 variant should take much less time; mostly just the time you'll spend Googling for an implementation of MD4.
+*/
+
 import (
 	"bytes"
 	"cryptopals/30/md4f"
