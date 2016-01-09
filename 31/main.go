@@ -10,6 +10,19 @@ import (
 	"time"
 )
 
+func getStatus(sign []byte) (int, float64) {
+	signHex := hex.EncodeToString(sign)
+	t := time.Now()
+	url := "http://localhost:8000/test?file=foo&signature=" + signHex
+	resp, err := http.Get(url)
+	elapsed := time.Since(t)
+	defer resp.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return resp.StatusCode, elapsed.Seconds()
+}
+
 func main() {
 	key := []byte("key")
 	msg := []byte("The quick brown fox jumps over the lazy dog")
@@ -20,23 +33,26 @@ func main() {
 	}
 
 	sign := make([]byte, 20)
+	_, elapsed := getStatus(sign)
+	averageTime := elapsed
+	succTime := 0.0
 	for i := 0; i < len(sign); i++ {
-		// TODO: determine delay for success bytes
-		expectedSeconds := float64(i+1) * 0.050
+		expected := float64(i+1) * succTime * 0.95
+		fmt.Println("expected:", expected)
 		for b := byte(0); b <= 255; b++ {
 			sign[i] = b
-			signHex := hex.EncodeToString(sign)
-			t := time.Now()
-			url := "http://localhost:8000/test?file=foo&signature=" + signHex
-			resp, err := http.Get(url)
-			elapsed := time.Since(t)
-			resp.Body.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Printf("%d %x %f\n", resp.StatusCode, sign, elapsed.Seconds())
-			if elapsed.Seconds() > expectedSeconds-0.010 {
-				break
+			status, elapsed := getStatus(sign)
+			fmt.Printf("%d %x %f %f\n", status, sign, elapsed, averageTime)
+			if succTime == 0.0 {
+				if elapsed > averageTime*4 {
+					succTime = elapsed
+					break
+				}
+				averageTime = (elapsed + averageTime) / 2
+			} else {
+				if elapsed > expected {
+					break
+				}
 			}
 		}
 	}
