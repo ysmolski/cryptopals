@@ -38,7 +38,7 @@ func response(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "signature parameter is missing")
 		return
 	}
-	fmt.Println(file[0], sign[0])
+	// fmt.Println(file[0], sign[0])
 	clientSign, err := hex.DecodeString(sign[0])
 	if err != nil {
 		io.WriteString(w, "sign is not hex encoded!")
@@ -51,7 +51,7 @@ func response(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	fmt.Printf("%x %x -> %t\n", clientSign, serverSign, same)
+	// fmt.Printf("%x %x -> %t\n", clientSign, serverSign, same)
 }
 
 func main() {

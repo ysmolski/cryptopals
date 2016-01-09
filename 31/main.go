@@ -33,8 +33,7 @@ func main() {
 	}
 
 	sign := make([]byte, 20)
-	_, elapsed := getStatus(sign)
-	averageTime := elapsed
+	_, averageTime := getStatus(sign)
 	succTime := 0.0
 	for i := 0; i < len(sign); i++ {
 		expected := float64(i+1) * succTime * 0.95
@@ -46,6 +45,7 @@ func main() {
 			if succTime == 0.0 {
 				if elapsed > averageTime*4 {
 					succTime = elapsed
+					fmt.Println("delay for success byte:", succTime)
 					break
 				}
 				averageTime = (elapsed + averageTime) / 2
