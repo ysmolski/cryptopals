@@ -16,7 +16,7 @@ Ok, that was fun, now repeat the exercise with bignums like in the real world. H
 */
 
 import (
-	"crypto/rand"
+	"cryptopals/util"
 	"fmt"
 	"math/big"
 )
@@ -25,25 +25,13 @@ var (
 	pStr = "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff"
 )
 
-func randomBig(max *big.Int) *big.Int {
-	i, _ := rand.Int(rand.Reader, max)
-	return i
-}
-
-func genExpPair(p, g *big.Int) (pub, priv *big.Int) {
-	a := randomBig(p)
-	A := big.NewInt(0)
-	A.Exp(g, a, p)
-	return A, a
-}
-
 func main() {
 	p := big.NewInt(0)
 	p.SetString(pStr, 16)
 	g := big.NewInt(2)
 
-	A, a := genExpPair(p, g)
-	B, b := genExpPair(p, g)
+	A, a := util.GenExpPair(p, g)
+	B, b := util.GenExpPair(p, g)
 
 	s1 := big.NewInt(0)
 	s2 := big.NewInt(0)

@@ -26,9 +26,9 @@ func Pad(seq []byte, n int) []byte {
 
 func PadTo(seq []byte, size int) []byte {
 	if len(seq)%size != 0 {
-		return Pad(seq, len(seq)+16-len(seq)%size)
+		return Pad(seq, len(seq)+size-len(seq)%size)
 	}
-	return Pad(seq, len(seq)+16)
+	return Pad(seq, len(seq)+size)
 }
 
 var BadPad = errors.New("Bad padding")
@@ -49,7 +49,6 @@ func CheckPadding(b []byte) ([]byte, error) {
 		return b[:len(b)-last], nil
 	}
 	return b, BadPad
-
 }
 
 func ReadBase64Stdin() []byte {
@@ -116,16 +115,16 @@ func CBCDecrypt(block cipher.Block, iv, dst, src []byte) {
 		return
 	}
 	x := make([]byte, size)
-	old := make([]byte, size)
+	oldSrc := make([]byte, size)
 	copy(x, iv)
 	var i int
 	for i = 0; i < len(dst) && i < len(src); i += size {
-		copy(old, dst[i:i+size])
+		copy(oldSrc, src[i:i+size])
 		block.Decrypt(dst[i:i+size], src[i:i+size])
 		for j := 0; j < size; j++ {
 			dst[i+j] ^= x[j]
 		}
-		copy(x, old)
+		copy(x, oldSrc)
 	}
 }
 
