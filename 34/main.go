@@ -1,5 +1,9 @@
 package main
 
+/*
+Implement a MITM key-fixing attack on Diffie-Hellman with parameter injection
+*/
+
 import (
 	"crypto/aes"
 	"crypto/sha1"
@@ -10,7 +14,7 @@ import (
 )
 
 var (
-	pStr = "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff"
+	pStr = "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327fffffffffffff"
 	// pStr = "37"
 )
 
@@ -43,39 +47,71 @@ func main() {
 	A, a := util.GenExpPair(p, g)
 	fmt.Println("A->B: p, g, A")
 
-	// A->B
+	// A->M
 	// Send "p", "g", "A"
+
+	// M->B
+	// Send "p", "g", "p"
 
 	B, b := util.GenExpPair(p, g)
 	sB := big.NewInt(0)
-	sB.Exp(A, b, p)
-	fmt.Println("B->A: B")
+	sB.Exp(p, b, p)
+	sB.Mod(sB, p)
+	fmt.Println("B->M: B")
 
-	// B->A
+	// B->M
 	// Send "B"
 
+	// M->A
+	// Send "p"
+
 	sA := big.NewInt(0)
-	sA.Exp(B, a, p)
+	sA.Exp(p, a, p)
+	sA.Mod(sA, p)
 
 	t1 := []byte("secret message from Alice")
 	ct1, iv1 := aesCrypt(sA, t1)
-	fmt.Printf("A->B ct1=%x iv1=%x\n", ct1, iv1)
+	fmt.Printf("A->M->B ct1=%x iv1=%x\n", ct1, iv1)
 
-	// A->B
+	// A->M
 	// Send ct1, iv1 == AES-CBC(SHA1(s)[0:16], iv=random(16), msg) + iv
 
+	// decrypt ct from A intercepted by MITM
+	t1M := aesDecrypt(big.NewInt(0), ct1, iv1)
+	fmt.Println("A-> intercepted:", string(t1M))
+
+	// M->B
 	t1B := aesDecrypt(sB, ct1, iv1)
 	fmt.Println("B received:", string(t1B))
 
 	t2 := []byte("secret message from Bob")
 	ct2, iv2 := aesCrypt(sB, t2)
-	fmt.Printf("B->A ct2=%x iv2=%x\n", ct2, iv2)
+	fmt.Printf("B->M->A ct2=%x iv2=%x\n", ct2, iv2)
 
 	// B->A
 	// Send AES-CBC(SHA1(s)[0:16], iv=random(16), A's msg) + iv
 
+	// decrypt ct from A intercepted by MITM
+	t2M := aesDecrypt(big.NewInt(0), ct2, iv2)
+	fmt.Println("B-> intercepted:", string(t2M))
+
 	t2A := aesDecrypt(sA, ct2, iv2)
 	fmt.Println("A received:", string(t2A))
 
-	fmt.Printf(" a = %s\n A = %s\n b = %s\n B = %s\n sA == sB -> %t \n", a, A, b, B, sA.Cmp(sB) == 0)
+	fmt.Printf(" a = %x\n A = %x\n b = %x\n B = %x\n sA == sB -> %t \n", a, A, b, B, sA.Cmp(sB) == 0)
+	fmt.Printf(" sA = %x \n sB = %x\n", sA, sB)
+
+	// golang 1.5 big with math/big.Exp(x, y, m)
+	// for x>=m and y ~= x it returns m instead of 0
+	//
+	// {
+	//	a, _ := big.NewInt(01).SetString(pStr, 16)
+	//	b := util.RandomBig(p.Div(p, big.NewInt(1000000)))
+	//	c, _ := big.NewInt(0).SetString(pStr, 16)
+	//	z := big.NewInt(01)
+	//	z.Exp(a, b, c)
+	//	z.Mod(z, c)
+	//	zero := big.NewInt(0)
+	//	fmt.Printf("z=%x %d\n", z, zero.Cmp(z))
+	// }
 }
