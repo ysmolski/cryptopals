@@ -8,15 +8,6 @@ import (
 	"github.com/ysmolsky/cryptopals/tools"
 )
 
-type ScoredText struct {
-	Score float64
-	Text  []byte
-}
-type scoredKeysize struct {
-	dist  float64
-	ksize int
-}
-
 const key = "YELLOW SUBMARINE"
 
 func main() {

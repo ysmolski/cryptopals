@@ -1,4 +1,4 @@
-module github.com/ysmolsky/cryptopals/ch06
+module github.com/ysmolsky/cryptopals/ch07
 
 go 1.18
 
