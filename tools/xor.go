@@ -14,6 +14,16 @@ func XorBytes(a, b []byte) []byte {
 	return c
 }
 
+// XorBytesInplace xors bytes from dst and src and puts the result into dst.
+func XorBytesInplace(dst, src []byte) {
+	if len(dst) != len(src) {
+		panic("length of dst and src should be equal")
+	}
+	for i := range dst {
+		dst[i] = dst[i] ^ src[i]
+	}
+}
+
 // TransposeByN transposes seq by putting elements
 // 0, 0+n, 0+2n, ... into 1st chunk
 // 1, 1+n, 1+2n, ... into 2nd chunk
