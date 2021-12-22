@@ -21,10 +21,10 @@ func UnpadPKCS7(a []byte) ([]byte, error) {
 	for i := 1; i < last; i++ {
 		pos := len(a) - 1 - i
 		if int(a[pos]) != last {
-			return nil, fmt.Errorf("Bad padding: expected %d at pos %d", last, pos)
+			return nil, fmt.Errorf("bad padding")
 		}
 	}
-	return a[:len(a)-1-last], nil
+	return a[:len(a)-last], nil
 }
 
 func RandBytes(n int) []byte {
