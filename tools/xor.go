@@ -16,10 +16,11 @@ func XorBytes(a, b []byte) []byte {
 
 // XorBytesInplace xors bytes from dst and src and puts the result into dst.
 func XorBytesInplace(dst, src []byte) {
-	if len(dst) != len(src) {
-		panic("length of dst and src should be equal")
+	m := src
+	if len(dst) < len(src) {
+		m = dst
 	}
-	for i := range dst {
+	for i := range m {
 		dst[i] = dst[i] ^ src[i]
 	}
 }
