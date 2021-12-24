@@ -17,6 +17,9 @@ func PadPKCS7(a []byte, n int) []byte {
 }
 
 func UnpadPKCS7(a []byte) ([]byte, error) {
+	if len(a) == 0 {
+		panic("unpadding empty array")
+	}
 	last := int(a[len(a)-1])
 	if last == 0 {
 		return nil, fmt.Errorf("bad padding")
