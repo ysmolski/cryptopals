@@ -31,6 +31,11 @@ func TestUnpadPKCS7(t *testing.T) {
 			out: nil,
 			err: fmt.Errorf("bad padding"),
 		},
+		{
+			in:  []byte("ICE ICE BABY\x00"),
+			out: nil,
+			err: fmt.Errorf("bad padding"),
+		},
 	}
 
 	for _, test := range tests {

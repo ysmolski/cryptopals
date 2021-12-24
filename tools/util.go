@@ -18,6 +18,9 @@ func PadPKCS7(a []byte, n int) []byte {
 
 func UnpadPKCS7(a []byte) ([]byte, error) {
 	last := int(a[len(a)-1])
+	if last == 0 {
+		return nil, fmt.Errorf("bad padding")
+	}
 	for i := 1; i < last; i++ {
 		pos := len(a) - 1 - i
 		if int(a[pos]) != last {
