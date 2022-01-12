@@ -1,0 +1,52 @@
+In cases when Middleman controls g parameter for negotiated groups in DHKE,
+3 attacks are possible.
+
+1. g = 1
+
+A->M : p, g
+M->B : p, 1
+publicA = g**a mod p
+A->M : publicA
+M->B : 1
+publicB = 1**b mod p = 1 
+B->M : 1
+M->A : 1
+
+a: s = 1**a % p = 1
+b: s = 1**b % p = 1 
+
+
+2. g = p
+
+A to M: p, g
+M to B: p, p
+
+pubA = g**a mod p
+
+a to m: pubA
+m to b: 0 
+
+pubB = p**b mod p = 0
+b to m: pubB=0
+m to a: pubB=0
+
+a: s = 0**a mod p = 0
+b: s = 0**b mod p = 0
+
+
+3. g = p-1
+
+a to m: p, g
+m to b: p, p-1
+
+pubA = g**a mod p
+
+a to m: pubA
+m to b: 1
+
+pubB = (p-1)**b mod p = p-1 or 1
+b to m: pubB=p-1 or 1
+m to a: 1
+
+a: s = 1**a mod p = 1
+b: s = 1**b mod p = 1
