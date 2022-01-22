@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -116,7 +117,7 @@ func Verify(pub *PublicKey, r, s *big.Int, hash []byte) bool {
 	return z.Cmp(r) == 0
 }
 
-func main() {
+func test() {
 	params := PregenParameters()
 	priv := new(PrivateKey)
 	priv.Parameters = *params
@@ -133,4 +134,48 @@ func main() {
 
 	ok := Verify(&priv.PublicKey, r, s, hash[:])
 	fmt.Println(ok)
+}
+
+func calcAGivenK(r, s, k, d, q *big.Int) *big.Int {
+	rInv := new(big.Int).ModInverse(r, q)
+	if rInv == nil {
+		log.Fatal("cannot invert r")
+	}
+	a := new(big.Int).Mul(s, k)
+	a.Sub(a, d)
+	a.Mul(a, rInv)
+	a.Mod(a, q)
+	return a
+}
+
+func main() {
+	// test()
+	params := PregenParameters()
+	priv := new(PrivateKey)
+	priv.Parameters = *params
+	priv.PublicKey.A, _ = new(big.Int).SetString("84ad4719d044495496a3201c8ff484feb45b962e7302e56a392aee4abab3e4bdebf2955b4736012f21a08084056b19bcd7fee56048e004e44984e2f411788efdc837a0d2e5abb7b555039fd243ac01f0fb2ed1dec568280ce678e931868d23eb095fde9d3779191b8c0299d6e07bbb283e6633451e535c45513b2d33c99ea17", 16)
+	hash, _ := hex.DecodeString("d2d0714f014a9784047eaeccf956520045c45265")
+	r, _ := new(big.Int).SetString("548099063082341131477253921760299949438196259240", 10)
+	s, _ := new(big.Int).SetString("857042759984254168557880549501802188789837994940", 10)
+
+	// determine k from 0 .. 0x10000
+	k := new(big.Int)
+	one := big.NewInt(1)
+	for k.Int64() < 0x10000 {
+		r2 := new(big.Int).Exp(priv.G, k, priv.P)
+		r2.Mod(r2, priv.Q)
+		if r2.Cmp(r) == 0 {
+			break
+		}
+		k.Add(k, one)
+	}
+	fmt.Println("found k =", k)
+
+	a := calcAGivenK(r, s, k, new(big.Int).SetBytes(hash), priv.Q)
+	fmt.Println("a =", a)
+	aHex := hex.EncodeToString(a.Bytes())
+	fmt.Println("hex(a) =", aHex)
+
+	aSha1 := sha1.Sum([]byte(aHex))
+	fmt.Printf("SHA1(hex(a)) = %x\n", aSha1)
 }
